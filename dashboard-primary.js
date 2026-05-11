@@ -3,9 +3,7 @@ import { supabase } from "./supabase-init.js";
 // APP STATE
 const roleNames = {
     headboy: "Wing Head Boy",
-    headgirl: "Wing Head Girl",
-    deputyboy: "Deputy Head Boy",
-    deputygirl: "Deputy Head Girl"
+    headgirl: "Wing Head Girl"
 };
 
 const resultChartEl = document.getElementById("resultChart");
