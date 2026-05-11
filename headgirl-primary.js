@@ -45,7 +45,7 @@ function castVote(candidate) {
     localStorage.setItem("vote_headgirl", candidate);
     document.body.style.opacity = "0";
     document.body.style.transition = "opacity 0.4s ease";
-    setTimeout(() => { window.location.href = "deputyboy-primary.html"; }, 600);
+    setTimeout(() => { window.location.href = "confirm-primary.html"; }, 600);
 }
 
 loadCandidates();
