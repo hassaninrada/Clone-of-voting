@@ -1,4 +1,5 @@
 const CACHE_NAME = 'nasra-vote-v7';
+
 const ASSETS = [
   './',
   './index.html',
@@ -47,24 +48,44 @@ const ASSETS = [
   './about-student.html',
   './style.css',
   './supabase-init.js',
-  './developer-credit.js',
-  'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css',
-  'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap'
+  './developer-credit.js'
 ];
 
+// INSTALL (SAFE CACHE - NO CRASH)
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
+    caches.open(CACHE_NAME).then(async (cache) => {
+      for (const asset of ASSETS) {
+        try {
+          await cache.add(asset);
+        } catch (err) {
+          console.warn('Cache skipped:', asset);
+        }
+      }
     })
   );
 });
 
+// FETCH (CACHE FIRST STRATEGY)
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request);
+    })
+  );
+});
+
+// OPTIONAL: CLEAN OLD CACHE
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      );
     })
   );
 });
