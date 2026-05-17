@@ -2,7 +2,9 @@ import { supabase } from "./supabase-init.js";
 
 const gr = localStorage.getItem("primary_gr");
 
-// ✅ LOAD VOTES (CORRECT KEYS)
+// ======================
+// LOAD VOTES (SAFE)
+// ======================
 const votes = {
     headboy: localStorage.getItem("vote_headboy") || "ABSTAIN",
     headgirl: localStorage.getItem("vote_headgirl") || "ABSTAIN",
@@ -10,7 +12,9 @@ const votes = {
     deputy_headgirl: localStorage.getItem("vote_deputyheadgirl") || "ABSTAIN"
 };
 
-// ✅ DISPLAY
+// ======================
+// DISPLAY (SAFE UI)
+// ======================
 document.getElementById("hb") && (document.getElementById("hb").textContent = votes.headboy);
 document.getElementById("hg") && (document.getElementById("hg").textContent = votes.headgirl);
 document.getElementById("dhb") && (document.getElementById("dhb").textContent = votes.deputy_headboy);
@@ -20,7 +24,9 @@ document.getElementById("dhg") && (document.getElementById("dhg").textContent = 
 const sessIdEl = document.getElementById("sessId");
 if (sessIdEl && gr) sessIdEl.textContent = `#${gr}`;
 
-// ✅ FINAL SUBMIT
+// ======================
+// FINAL SUBMIT
+// ======================
 const finalBtn = document.getElementById("finalBtn");
 
 if (finalBtn) {
@@ -38,13 +44,15 @@ if (finalBtn) {
 
             const isTch = gr && gr.startsWith("TCH");
 
-            // check duplicate vote
+            // check already voted
             if (!isTch && gr) {
-                const { data } = await supabase
+                const { data, error } = await supabase
                     .from("students")
                     .select("voted_primary")
                     .eq("cid", gr)
                     .single();
+
+                if (error) throw error;
 
                 if (data?.voted_primary) {
                     alert("Already voted!");
@@ -53,14 +61,19 @@ if (finalBtn) {
                 }
             }
 
-            // submit ALL votes
+            // ======================
+            // SUBMIT ONLY REAL VOTES
+            // ======================
             for (const role in votes) {
 
-                if (votes[role] !== "ABSTAIN") {
+                const value = votes[role];
+
+                // ignore ABSTAIN
+                if (value && value !== "ABSTAIN") {
 
                     const { error } = await supabase.rpc("vote_upsert_secure", {
                         p_role: role,
-                        p_candidate_name: votes[role],
+                        p_candidate_name: value,
                         p_voter_id: gr || "GUEST"
                     });
 
@@ -68,15 +81,19 @@ if (finalBtn) {
                 }
             }
 
-            // mark voted
+            // mark student voted
             if (!isTch && gr) {
-                await supabase
+                const { error } = await supabase
                     .from("students")
                     .update({ voted_primary: true })
                     .eq("cid", gr);
+
+                if (error) throw error;
             }
 
-            // clear storage
+            // ======================
+            // CLEAN STORAGE
+            // ======================
             localStorage.removeItem("vote_headboy");
             localStorage.removeItem("vote_headgirl");
             localStorage.removeItem("vote_deputyheadboy");
@@ -87,7 +104,8 @@ if (finalBtn) {
             }, 800);
 
         } catch (err) {
-            console.error(err);
+
+            console.error("Voting Error:", err);
 
             if (loader) {
                 loader.classList.add("hidden");
@@ -101,7 +119,9 @@ if (finalBtn) {
     });
 }
 
-// restart
+// ======================
+// RESTART
+// ======================
 document.getElementById("restartBtn")?.addEventListener("click", () => {
 
     if (confirm("Discard all selections?")) {
@@ -114,23 +134,6 @@ document.getElementById("restartBtn")?.addEventListener("click", () => {
         window.location.href = "student-primary.html";
     }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
